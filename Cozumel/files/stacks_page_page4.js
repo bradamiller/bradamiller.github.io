@@ -66,7 +66,7 @@ else if('40.063em'==='9999px'){$('.parent-link.hide-for-medium-up',stack).remove
 return stack;})(stacks.stacks_in_p2_n3_page4);
 stacks.stacks_in_3_page4 = {};
 stacks.stacks_in_3_page4 = (function(stack) {
-var jQuery = stacks.jQuery;var $ = jQuery;/* Gallery 3 3.2.7 */
+var jQuery = stacks.jQuery;var $ = jQuery;/* Gallery 3 3.2.8 */
 
 $(function() {
 	var images = [];
@@ -83,6 +83,20 @@ $(function() {
 		}
 		return image.src;
 	}
+
+    /**
+    * Randomize array element order in-place.
+    * Using Durstenfeld shuffle algorithm.
+    */
+    var shuffleArray = function(array) {
+        for (var i = array.length - 1; i > 0; i--) {
+            var j = Math.floor(Math.random() * (i + 1));
+            var temp = array[i];
+            array[i] = array[j];
+            array[j] = temp;
+        }
+        return array;
+    }
 
 	// $.each($('.stacks_in_3_page4_photo_wrapper .stacks_in'), function(){
 	$.each($('.stacks_in_3_page4_photo_wrapper').children(), function(){
@@ -218,7 +232,7 @@ $(function() {
 			}
 
 			// Additional Sentry Images
-			$.each($(".sentryContent img").css("display","none"), function() {
+			$.each($(".sentryWrapper").not(".sentryEditMode").find("img").css("display","none"), function() {
 				images.push({
 					imgLgSrc:     this.src,
 					imgLgCaption: this.alt,
@@ -231,20 +245,26 @@ $(function() {
 
 	});
 
-	if (stacks['stacks_in_3_page4'].initializeGrid) {
-	    stacks['stacks_in_3_page4'].initializeGrid('.stacks_in_3_page4_photo_wrapper', images, function () {
-	    	if (stacks['stacks_in_3_page4'].initializeLightbox) {
-				stacks['stacks_in_3_page4'].initializeLightbox('.stacks_in_3_page4_photo_wrapper', images, function () {
-					//$('#stacks_in_3_page4').toggle();
-					
-				});
-	    	}
-	    });
-	}
-	if (stacks['stacks_in_3_page4'].initializeSlider) {
-		stacks['stacks_in_3_page4'].initializeSlider('.stacks_in_3_page4_photo_wrapper', images, function () {
-			//$('#stacks_in_3_page4').toggle();
-		});
+	if (images.length > 0) {
+
+	    
+
+		if (stacks['stacks_in_3_page4'].initializeGrid) {
+		    stacks['stacks_in_3_page4'].initializeGrid('.stacks_in_3_page4_photo_wrapper', images, function () {
+		    	if (stacks['stacks_in_3_page4'].initializeLightbox) {
+					stacks['stacks_in_3_page4'].initializeLightbox('.stacks_in_3_page4_photo_wrapper', images, function () {
+						//$('#stacks_in_3_page4').toggle();
+						
+					});
+		    	}
+		    });
+		}
+		if (stacks['stacks_in_3_page4'].initializeSlider) {
+			stacks['stacks_in_3_page4'].initializeSlider('.stacks_in_3_page4_photo_wrapper', images, function () {
+				//$('#stacks_in_3_page4').toggle();
+			});
+		}
+
 	}
 
 	
@@ -310,7 +330,7 @@ var jQuery = stacks.jQuery;var $ = jQuery;stacks['stacks_in_3_page4'].initialize
 return stack;})(stacks.stacks_in_26_page4);
 stacks.stacks_in_39_page4 = {};
 stacks.stacks_in_39_page4 = (function(stack) {
-var jQuery = stacks.jQuery;var $ = jQuery;/* Photostream 2.2.2 */
+var jQuery = stacks.jQuery;var $ = jQuery;/* Photostream 2.2.3 */
 
 $(function _photostreamstack(){
 
@@ -498,142 +518,130 @@ $(function _photostreamstack(){
 
 			$.post('files/aps.php', 
 				{
-					url: 'https://sharedstreams.icloud.com/' + aps_id + '/sharedstreams/webstream'
+					url: 'https://p02-sharedstreams.icloud.com/' + aps_id + '/sharedstreams/webstream'
 				},
 				function _success(data){
-					var host = '';
-					if (data){
-						var moved = jQuery.parseJSON(data);
-						host = moved['X-Apple-MMe-Host'];
-					}
+                        var webstream = jQuery.parseJSON(data);
+                        streamName = webstream.streamName;
+                        if (displayTitle){
+                            $('#'+id+'_title').html(streamName);
+                        }
+                        
+                        // check for amount of images to be displayed
+                        var amountOfPhotos = webstream.photos.length;
+                        var stopByIndex = 0;
+                        
+                        if (amount == 'limited' && limited < amountOfPhotos){
+                            if (sortPhotosDesc) {
+                                stopByIndex = amountOfPhotos - limited;
+                            } else {
+                                stopByIndex = limited;
+                            }
+                        } else {
+                            if (sortPhotosDesc) {
+                                stopByIndex = 0;
+                            } else {
+                                stopByIndex = amountOfPhotos;
+                            }
+                        }
+                        
+                        for (var i = 0; i < stopByIndex; ++i) {
+                        
+                            derivatives = Object.keys(webstream.photos[i].derivatives);
+                            if (derivatives.length > 1){
+                                photoGuids.photoGuids.push(webstream.photos[i].photoGuid);
+                                caption.push(webstream.photos[i].caption);
+                                if (parseInt(webstream.photos[i].derivatives[derivatives[0]].fileSize) < parseInt(webstream.photos[i].derivatives[derivatives[1]].fileSize)){
+                                    thumbnails.push(webstream.photos[i].derivatives[derivatives[0]]);
+                                    thumbnailsIndex.push(webstream.photos[i].derivatives[derivatives[0]].checksum);
+                                    photos.push(webstream.photos[i].derivatives[derivatives[1]]);
+                                    photosIndex.push(webstream.photos[i].derivatives[derivatives[1]].checksum);
+                                } else {
+                                    thumbnails.push(webstream.photos[i].derivatives[derivatives[1]]);
+                                    thumbnailsIndex.push(webstream.photos[i].derivatives[derivatives[1]].checksum);
+                                    photos.push(webstream.photos[i].derivatives[derivatives[0]]);
+                                    photosIndex.push(webstream.photos[i].derivatives[derivatives[0]].checksum);
+                                }
+                            } else if (derivatives.length == 1){
+                                photoGuids.photoGuids.push(webstream.photos[i].photoGuid);
+                                caption.push(webstream.photos[i].caption);
+                                thumbnails.push(webstream.photos[i].derivatives[derivatives[0]]);
+                                thumbnailsIndex.push(webstream.photos[i].derivatives[derivatives[0]]);
+                                photos.push(webstream.photos[i].derivatives[derivatives[0]].checksum);
+                                photosIndex.push(webstream.photos[i].derivatives[derivatives[0]].checksum);
+                            } else {
+                                // do nothing
+                            }
+                        }
 
-					$.post('files/aps.php', 
-					{
-						url: 'https://' + host + '/' + aps_id + '/sharedstreams/webstream'
-					},
-					function _success(data){
-						var webstream = jQuery.parseJSON(data);
-						streamName = webstream.streamName;
-						if (displayTitle){
-							$('#'+id+'_title').html(streamName);
-						}
-						
-						// check for amount of images to be displayed
-						var amountOfPhotos = webstream.photos.length;
-						var stopByIndex = 0;
-						
-						if (amount == 'limited' && limited < amountOfPhotos){
-							if (sortPhotosDesc) {
-								stopByIndex = amountOfPhotos - limited;
-							} else {
-								stopByIndex = limited;
-							}
-						} else {
-							if (sortPhotosDesc) {
-								stopByIndex = 0;
-							} else {
-								stopByIndex = amountOfPhotos;
-							}
-						}
-						
-						for (var i = 0; i < stopByIndex; ++i) {
-						
-						    derivatives = Object.keys(webstream.photos[i].derivatives);
-						    if (derivatives.length > 1){
-								photoGuids.photoGuids.push(webstream.photos[i].photoGuid);
-								caption.push(webstream.photos[i].caption);
-						    	if (parseInt(webstream.photos[i].derivatives[derivatives[0]].fileSize) < parseInt(webstream.photos[i].derivatives[derivatives[1]].fileSize)){
-						    		thumbnails.push(webstream.photos[i].derivatives[derivatives[0]]);
-						    		thumbnailsIndex.push(webstream.photos[i].derivatives[derivatives[0]].checksum);
-						    		photos.push(webstream.photos[i].derivatives[derivatives[1]]);
-						    		photosIndex.push(webstream.photos[i].derivatives[derivatives[1]].checksum);
-						    	} else {
-						    		thumbnails.push(webstream.photos[i].derivatives[derivatives[1]]);
-						    		thumbnailsIndex.push(webstream.photos[i].derivatives[derivatives[1]].checksum);
-						    		photos.push(webstream.photos[i].derivatives[derivatives[0]]);
-						    		photosIndex.push(webstream.photos[i].derivatives[derivatives[0]].checksum);
-						    	}
-						    } else if (derivatives.length == 1){
-								photoGuids.photoGuids.push(webstream.photos[i].photoGuid);
-								caption.push(webstream.photos[i].caption);
-						    	thumbnails.push(webstream.photos[i].derivatives[derivatives[0]]);
-						    	thumbnailsIndex.push(webstream.photos[i].derivatives[derivatives[0]]);
-						    	photos.push(webstream.photos[i].derivatives[derivatives[0]].checksum);
-						    	photosIndex.push(webstream.photos[i].derivatives[derivatives[0]].checksum);
-						    } else {
-						    	// do nothing
-						    }
-						}
+                        $.post('files/post.php', 
+                            {
+                                url: 'https://p02-sharedstreams.icloud.com/' + aps_id + '/sharedstreams/webasseturls',          
+                                data_string: JSON.stringify(photoGuids)
+                            },
+                            function _success(data){
+                                toggleLoadingIndicator();
+                                var webasseturls = jQuery.parseJSON(data),
+                                    loc = Object.keys(webasseturls.locations)[0]; // TODO: maybe randomize the CDN locations?
+                                    cdn_path = webasseturls.locations[loc].scheme + '://' + webasseturls.locations[loc].hosts[0];
 
-						$.post('files/post.php', 
-							{
-								url: 'https://' + host + '/' + aps_id + '/sharedstreams/webasseturls',			
-								data_string: JSON.stringify(photoGuids)
-							},
-							function _success(data){
-								toggleLoadingIndicator();
-								var webasseturls = jQuery.parseJSON(data),
-									loc = Object.keys(webasseturls.locations)[0]; // TODO: maybe randomize the CDN locations?
-									cdn_path = webasseturls.locations[loc].scheme + '://' + webasseturls.locations[loc].hosts[0];
+                                $.each(webasseturls.items, function(key, value){
+                                    var i = $.inArray(key, thumbnailsIndex);
+                                    if (i != -1) {
+                                        thumbnails[i].src = cdn_path + value.url_path;
+                                    }
+                                    var j = $.inArray(key, photosIndex);
+                                    if (j != -1) {
+                                        photos[j].src = cdn_path + value.url_path;
+                                    }
+                                });
 
-								$.each(webasseturls.items, function(key, value){
-									var i = $.inArray(key, thumbnailsIndex);
-									if (i != -1) {
-										thumbnails[i].src = cdn_path + value.url_path;
-									}
-									var j = $.inArray(key, photosIndex);
-									if (j != -1) {
-										photos[j].src = cdn_path + value.url_path;
-									}
-								});
+                                var html = '';
 
-								var html = '';
-
-								if (basicStyle == 'slider'){
-									if (sliderTheme == 'camera'){
-										for (var i = 0; i < thumbnails.length; ++i) {
-											html += '<div data-thumb="' + thumbnails[i].src + '" data-src="' + photos[i].src + '">';
-											//html += '<div class="camera_caption fadeFromBottom">';
-											//html += $(this).find('img')[0].alt;
-											//html += '</div>';
-											html += '</div>';
-										};
-										initializeCameraSlider(html);
-									// sliderTheme == idealImageSlider
-									} else {
-										
-										for (var i = 0; i < thumbnails.length; ++i) {
-											if (i === 0){
-												html += '<img src="' + photos[i].src + '" />';
-											} else {
-												html += '<img data-src="' + photos[i].src + '" />';
-											}
-										}
-										
-										initializeIdealImageSlider(html);
-									}
-								//basicStyle == thumbnails
-								} else {
-									for (var i = 0; i < thumbnails.length; ++i) {
-										html += '<a href="' + photos[i].src + '" ';
-										
-										html += '><img ';
-										
-										html += 'src="' + thumbnails[i].src + '"height="' + thumbnails[i].height + '" width="' + thumbnails[i].width + '" /></a>';
-										
-										photoswipeItems.push({
-											src: photos[i].src,
-											w: photos[i].width,
-											h: photos[i].height,
-											msrc: thumbnails[i].src,
-											title: caption[i]
-										});
-										
-									}
-									initializeJustifiedThumbnails(html, photoswipeItems);
-								}
-							});
-					});
+                                if (basicStyle == 'slider'){
+                                    if (sliderTheme == 'camera'){
+                                        for (var i = 0; i < thumbnails.length; ++i) {
+                                            html += '<div data-thumb="' + thumbnails[i].src + '" data-src="' + photos[i].src + '">';
+                                            //html += '<div class="camera_caption fadeFromBottom">';
+                                            //html += $(this).find('img')[0].alt;
+                                            //html += '</div>';
+                                            html += '</div>';
+                                        };
+                                        initializeCameraSlider(html);
+                                    // sliderTheme == idealImageSlider
+                                    } else {
+                                        
+                                        for (var i = 0; i < thumbnails.length; ++i) {
+                                            if (i === 0){
+                                                html += '<img src="' + photos[i].src + '" />';
+                                            } else {
+                                                html += '<img data-src="' + photos[i].src + '" />';
+                                            }
+                                        }
+                                        
+                                        initializeIdealImageSlider(html);
+                                    }
+                                //basicStyle == thumbnails
+                                } else {
+                                    for (var i = 0; i < thumbnails.length; ++i) {
+                                        html += '<a href="' + photos[i].src + '" ';
+                                        
+                                        html += '><img ';
+                                        
+                                        html += 'src="' + thumbnails[i].src + '"height="' + thumbnails[i].height + '" width="' + thumbnails[i].width + '" /></a>';
+                                        
+                                        photoswipeItems.push({
+                                            src: photos[i].src,
+                                            w: photos[i].width,
+                                            h: photos[i].height,
+                                            msrc: thumbnails[i].src,
+                                            title: caption[i]
+                                        });
+                                        
+                                    }
+                                    initializeJustifiedThumbnails(html, photoswipeItems);
+                                }
+                            });
 				});
 				break;
 
